@@ -61,9 +61,8 @@ if __name__ == '__main__':
     print(f"Generating documents for {len(dataset.samples)} images.")
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print(f"Device: {device}.")
-    model = eval("models." + args.model)
-    model.to(device)
-    model.eval()
+    # model = eval("models." + args.model)
+    model = models.resnet50(pretrained=True)
     presence_judge = PresenceJudge(
         model,
         device,
@@ -74,7 +73,6 @@ if __name__ == '__main__':
     )
     all_image_indices = []
     for batch_idx, (images, indices) in enumerate(data_loader):
-        images.to(device)
         if batch_idx % 100 == 0:
             print(f"\tBatch: {batch_idx}")
         presence_judge.forward(images)

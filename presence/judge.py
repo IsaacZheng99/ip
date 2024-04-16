@@ -46,7 +46,7 @@ class PresenceJudge:
         """
         :param images: batched input images
         """
-        outputs = self.model(images)
+        outputs = self.model(images.to(self.device))
 
     def __mean_hook(self, module, input, output):
         batch_size = output.shape[0]
