@@ -42,7 +42,10 @@ class PresenceJudge:
         # register hook according to the presence way
         hook_func = self.presence_functions.get(self.presence_judge_way)
         if hook_func:
-            getattr(self.model, self.target_layer).register_forward_hook(hook_func)
+            if torch.cuda.device_count() > 1:
+                getattr(self.model.module, self.target_layer).register_forward_hook(hook_func)
+            else:
+                getattr(self.model, self.target_layer).register_forward_hook(hook_func)
         self.threshold = threshold
         self.image_indices = None  # selected images indices
 
@@ -90,7 +93,8 @@ class PresenceJudge:
                     present_neurons[image_idx].append(neuron_idx)
         # convert the present neurons to present words
         all_documents = ""
-        for _, neurons in present_neurons.items():
+        for image_idx, neurons in present_neurons.items():
+            all_documents += f"{self.image_indices[image_idx]} "
             for neuron in neurons:
                 all_documents += f'neuron{neuron} '
             all_documents += '\n'  # one line corresponds to one document
