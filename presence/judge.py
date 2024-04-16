@@ -65,6 +65,7 @@ class PresenceJudge:
         mean_maps = torch.mean(feature_maps, dim=2)
         present_neurons = defaultdict(list)  # key: image idx, value: [neuron]
         for image_idx in range(mean_maps.shape[0]):
+            present_neurons[image_idx] = []
             for neuron_idx in range(mean_maps.shape[1]):
                 # if mean value > threshold, we assume the neuron is present
                 if mean_maps[image_idx][neuron_idx] >= self.threshold:
@@ -87,6 +88,7 @@ class PresenceJudge:
         max_maps, _ = torch.max(feature_maps, dim=2)
         present_neurons = defaultdict(list)  # key: image idx, value: [neuron]
         for image_idx in range(max_maps.shape[0]):
+            present_neurons[image_idx] = []
             for neuron_idx in range(max_maps.shape[1]):
                 # if max value > threshold, we assume the neuron is present
                 if max_maps[image_idx][neuron_idx] >= self.threshold:
