@@ -8,6 +8,7 @@
 #       --presence_judge_way "mean" \
 #       --threshold 0.2 \
 #       --input_folder_path "./dataset/imagenet/data/train" \
+#       --input_data_type "train" \
 #       --ratio 0.5 \
 #       --sample_seed 123 \
 #       --output_path "./result/document/resnet50_layer4_train50_mean.txt" \
@@ -23,6 +24,7 @@ python gen_doc.py \
        --presence_judge_way "max" \
        --threshold 5 \
        --input_folder_path "./dataset/val" \
+       --input_data_type "val" \
        --ratio 1.0 \
        --sample_seed 123 \
        --output_path "./result/document/resnet50_layer4_val10000_max2.txt" \

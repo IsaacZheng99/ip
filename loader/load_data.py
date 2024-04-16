@@ -11,16 +11,19 @@ class RandomSubsetDataset(Dataset):
     """
     def __init__(self,
                  input_folder_path: str,
+                 input_date_type: str,
                  ratio: float,
                  transform: transforms,
                  sample_seed: int):
         """
         :param input_folder_path: folder path of the input images
+        :param input_date_type: train, val, test
         :param ratio: the ratio of selected images
         :param transform: to transform images
         :param sample_seed: seed for randomly selecting images
         """
         self.input_folder_path = input_folder_path
+        self.input_date_type = input_date_type
         self.ratio = ratio
         self.transform = transform
         self.sample_seed = sample_seed
@@ -29,6 +32,11 @@ class RandomSubsetDataset(Dataset):
 
     def _select_samples(self):
         random.seed(self.sample_seed)
+        # for ImageNet, the file names of images of different type are different
+        if self.input_date_type == "train":
+            split_index = 1
+        else:
+            split_index = 2
         for sub_folder in os.listdir(self.input_folder_path):
             sub_folder_path = os.path.join(self.input_folder_path, sub_folder)
             if not os.path.isdir(sub_folder_path):
@@ -40,7 +48,7 @@ class RandomSubsetDataset(Dataset):
                     continue
                 image_path = os.path.join(sub_folder_path, file_name)
                 image_paths.append(image_path)
-                image_indices.append(int(file_name.split("_")[2].split(".")[0]))
+                image_indices.append(int(file_name.split("_")[split_index].split(".")[0]))
             selected_count = min(int(len(image_paths) * self.ratio), len(image_paths))
             selected_lst_indices = random.sample(list(range(len(image_paths))), selected_count)
             selected_image_paths = [image_paths[idx] for idx in selected_lst_indices]

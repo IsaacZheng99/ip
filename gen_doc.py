@@ -24,6 +24,8 @@ def set_arguments():
     parser.add_argument("--threshold", type=float, help="threshold for judging the presence of neurons")
     parser.add_argument("--input_folder_path", type=str,
                         help="folder path of the input images")
+    parser.add_argument("--input_data_type", type=str,
+                        help="train, val, test")
     parser.add_argument("--ratio", type=float,
                         help="the ratio of images for generating HLTM, you can set 1 to use all the images")
     parser.add_argument("--sample_seed", type=int, help="seed for randomly selecting images")
@@ -49,6 +51,7 @@ if __name__ == '__main__':
     # you can change the way to reading your image files
     dataset = RandomSubsetDataset(
         args.input_folder_path,
+        args.input_data_type,
         args.ratio,
         transform,
         args.sample_seed)
