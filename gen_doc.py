@@ -66,6 +66,7 @@ if __name__ == '__main__':
     model.eval()
     presence_judge = PresenceJudge(
         model,
+        device,
         args.target_layer,
         args.output_path,
         args.presence_judge_way,

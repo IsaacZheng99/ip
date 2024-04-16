@@ -11,19 +11,24 @@ class PresenceJudge:
     """
     def __init__(self,
                  model: nn.Module,
+                 device: torch.device,
                  target_layer: str,
                  output_path: str,
                  presence_judge_way: str,
                  threshold: float):
         """
         :param model: model to use
+        :param device: device to use
         :param target_layer: target layer to generate GradCAM for
         :param output_path: write the documents to the output path
         :param presence_judge_way: way to judging the presence of neurons
         :param threshold: threshold for judging the presence of neurons
         """
         self.model: nn.Module = model
+        self.device = device
+        self.model.to(self.device)
         self.model.eval()
+
         self.target_layer = target_layer
         self.output_path = output_path
         self.presence_judge_way = presence_judge_way
