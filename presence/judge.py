@@ -27,8 +27,8 @@ class PresenceJudge:
         self.model: nn.Module = model
         self.device = device
         # parallel
-        if torch.cuda.device_count() > 1:
-            self.model = nn.DataParallel(self.model)
+        # if torch.cuda.device_count() > 1:
+        #     self.model = nn.DataParallel(self.model)
         self.model.to(self.device)
         self.model.eval()
 
@@ -42,10 +42,11 @@ class PresenceJudge:
         # register hook according to the presence way
         hook_func = self.presence_functions.get(self.presence_judge_way)
         if hook_func:
-            if torch.cuda.device_count() > 1:
-                getattr(self.model.module, self.target_layer).register_forward_hook(hook_func)
-            else:
-                getattr(self.model, self.target_layer).register_forward_hook(hook_func)
+            # if torch.cuda.device_count() > 1:
+            #     getattr(self.model.module, self.target_layer).register_forward_hook(hook_func)
+            # else:
+            #     getattr(self.model, self.target_layer).register_forward_hook(hook_func)
+            getattr(self.model, self.target_layer).register_forward_hook(hook_func)
         self.threshold = threshold
         self.image_indices = None  # selected images indices
 
