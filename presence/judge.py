@@ -26,6 +26,9 @@ class PresenceJudge:
         """
         self.model: nn.Module = model
         self.device = device
+        # parallel
+        if torch.cuda.device_count() > 1:
+            self.model = nn.DataParallel(self.model)
         self.model.to(self.device)
         self.model.eval()
 
@@ -41,11 +44,14 @@ class PresenceJudge:
         if hook_func:
             getattr(self.model, self.target_layer).register_forward_hook(hook_func)
         self.threshold = threshold
+        self.image_indices = None  # selected images indices
 
-    def forward(self, images: torch.Tensor) -> None:
+    def forward(self, images: torch.Tensor, indices: torch.Tensor) -> None:
         """
         :param images: batched input images
+        :param indices: selected images indices
         """
+        self.image_indices = indices.tolist()
         outputs = self.model(images.to(self.device))
 
     def __mean_hook(self, module, input, output):
@@ -62,9 +68,10 @@ class PresenceJudge:
                     present_neurons[image_idx].append(neuron_idx)
         # convert the present neurons to present words
         all_documents = ""
-        for _, neurons in present_neurons.items():
+        for image_idx, neurons in present_neurons.items():
+            all_documents += f"{self.image_indices[image_idx]} "
             for neuron in neurons:
-                all_documents += f'neuron{neuron} '
+                all_documents += f"neuron{neuron} "
             all_documents += '\n'  # one line corresponds to one document
         with open(self.output_path, "a") as file:
             file.write(all_documents)

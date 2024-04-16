@@ -75,7 +75,7 @@ if __name__ == '__main__':
     for batch_idx, (images, indices) in enumerate(data_loader):
         if batch_idx % 100 == 0:
             print(f"\tBatch: {batch_idx}")
-        presence_judge.forward(images)
+        presence_judge.forward(images, indices)
         all_image_indices.extend(indices.tolist())
 
     # record the selected image indices
