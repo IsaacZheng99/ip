@@ -46,7 +46,6 @@ class PresenceJudge:
                 getattr(self.model.module, self.target_layer).register_forward_hook(hook_func)
             else:
                 getattr(self.model, self.target_layer).register_forward_hook(hook_func)
-            getattr(self.model, self.target_layer).register_forward_hook(hook_func)
         self.threshold = threshold
         self.image_indices = None  # selected images indices
 
