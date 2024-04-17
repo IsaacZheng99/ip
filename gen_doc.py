@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     # generate the documents
     print(f"Generating documents for {len(dataset.samples)} images.")
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device('cpu')
     print(f"Device: {device}.")
     # model = eval("models." + args.model)
     model = models.resnet50(pretrained=True)
@@ -75,7 +75,10 @@ if __name__ == '__main__':
     for batch_idx, (images, indices) in enumerate(data_loader):
         if batch_idx % 100 == 0:
             print(f"\tBatch: {batch_idx}")
-        presence_judge.forward(images, indices)
+        # TODO
+        gpu_idx = (batch_idx % 4) + 1
+        data_device = torch.device(f"cuda:{gpu_idx}") if torch.cuda.is_available() else torch.device('cpu')
+        presence_judge.forward(images.to(data_device), indices)
         all_image_indices.extend(indices.tolist())
 
     # record the selected image indices
