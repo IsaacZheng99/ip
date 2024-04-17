@@ -75,10 +75,7 @@ if __name__ == '__main__':
     for batch_idx, (images, indices) in enumerate(data_loader):
         if batch_idx % 100 == 0:
             print(f"\tBatch: {batch_idx}")
-        # TODO
-        gpu_idx = (batch_idx % 4) + 1
-        data_device = torch.device(f"cuda:{gpu_idx}") if torch.cuda.is_available() else torch.device('cpu')
-        presence_judge.forward(images.to(data_device), indices)
+        presence_judge.forward(torch.nn.DataParallel(images.cuda()), indices)
         all_image_indices.extend(indices.tolist())
 
     # record the selected image indices
