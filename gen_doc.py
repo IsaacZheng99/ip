@@ -82,7 +82,7 @@ def main(rank, world_size, args):
         transform,
         args.sample_seed)
     # get distributed dataloader
-    data_loader = distribute_dataloader(dataset, rank, world_size)
+    data_loader = distribute_dataloader(dataset, rank, world_size, args.batch_size)
 
     # generate the documents
     print(f"Generating documents for {len(dataset.samples)} images.")
