@@ -29,7 +29,7 @@ class PresenceJudge:
         # parallel
         if torch.cuda.device_count() > 1:
             self.model = nn.DataParallel(self.model)
-        # self.model.to(self.device)
+        self.model.to(self.device)
         self.model.eval()
 
         self.target_layer = target_layer
