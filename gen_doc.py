@@ -18,6 +18,7 @@ def set_arguments():
     set arguments
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument("--world_size", type=int, help="number of GPUs")
     parser.add_argument("--model", type=str, help="NN model")
     parser.add_argument("--size", type=eval, help="size of input image to the model")
     parser.add_argument("--mean", type=eval, help="mean for normalization")
@@ -119,11 +120,10 @@ if __name__ == '__main__':
     args = set_arguments()
 
     # distributed
-    world_size = 5
     mp.spawn(
         main,
-        args=(world_size, args),
-        nprocs=world_size
+        args=(args.world_size, args),
+        nprocs=args.world_size
     )
 
     print("Finished.")
