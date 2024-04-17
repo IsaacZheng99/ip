@@ -1,6 +1,11 @@
+import os
 import argparse
 import torch
+import torch.distributed as dist
 from torch.utils.data import DataLoader
+from torch.utils.data.distributed import DistributedSampler
+from torch.nn.parallel import DistributedDataParallel as DDP
+import torch.multiprocessing as mp
 from PIL import Image
 import torchvision.models as models
 import torchvision.transforms as transforms
@@ -35,9 +40,30 @@ def set_arguments():
     return args
 
 
-if __name__ == '__main__':
-    # set arguments
-    args = set_arguments()
+def set_distribution(rank, world_size):
+    # set up for distributed computation
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+    dist.init_process_group("nccl", rank=rank, world_size=world_size)
+
+
+def distribute_dataloader(dataset, rank, world_size, batch_size, pin_memory=False, num_workers=0):
+    # get distributed dataloader
+    sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=False, drop_last=False)
+    dataloader = DataLoader(dataset, batch_size=batch_size, pin_memory=pin_memory, num_workers=num_workers,
+                            drop_last=False, shuffle=False, sampler=sampler)
+
+    return dataloader
+
+
+def cleanup():
+    # clean up the process groups
+    dist.destroy_process_group()
+
+
+def main(rank, world_size, args):
+    # set up for distributed computation
+    set_distribution(rank, world_size)
 
     # collect the input data
     transform = transforms.Compose([
@@ -55,17 +81,18 @@ if __name__ == '__main__':
         args.ratio,
         transform,
         args.sample_seed)
-    data_loader = DataLoader(dataset, batch_size=args.batch_size, shuffle=False)
+    # get distributed dataloader
+    data_loader = distribute_dataloader(dataset, rank, world_size)
 
     # generate the documents
     print(f"Generating documents for {len(dataset.samples)} images.")
-    device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device('cpu')
-    print(f"Device: {device}.")
+    print(f"Device: {rank}.")
     # model = eval("models." + args.model)
     model = models.resnet50(pretrained=True)
+    model.to(rank)
+    model = DDP(model, device_ids=[rank], output_device=rank, find_unused_parameters=True)
     presence_judge = PresenceJudge(
         model,
-        device,
         args.target_layer,
         args.output_path,
         args.presence_judge_way,
@@ -75,7 +102,7 @@ if __name__ == '__main__':
     for batch_idx, (images, indices) in enumerate(data_loader):
         if batch_idx % 100 == 0:
             print(f"\tBatch: {batch_idx}")
-        presence_judge.forward(torch.nn.DataParallel(images.cuda()), indices)
+        presence_judge.forward(images, indices)
         all_image_indices.extend(indices.tolist())
 
     # record the selected image indices
@@ -83,5 +110,20 @@ if __name__ == '__main__':
     with open(args.selected_image_indices_path, "w") as file:
         for idx in all_image_indices:
             file.write(str(idx) + "\n")
+
+    # clean up the process groups
+    cleanup()
+
+if __name__ == '__main__':
+    # set arguments
+    args = set_arguments()
+
+    # distributed
+    world_size = 5
+    mp.spawn(
+        main,
+        args=(world_size, args),
+        nprocs=world_size
+    )
 
     print("Finished.")

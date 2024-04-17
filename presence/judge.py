@@ -11,25 +11,18 @@ class PresenceJudge:
     """
     def __init__(self,
                  model: nn.Module,
-                 device: torch.device,
                  target_layer: str,
                  output_path: str,
                  presence_judge_way: str,
                  threshold: float):
         """
         :param model: model to use
-        :param device: device of model
         :param target_layer: target layer to generate GradCAM for
         :param output_path: write the documents to the output path
         :param presence_judge_way: way to judging the presence of neurons
         :param threshold: threshold for judging the presence of neurons
         """
         self.model: nn.Module = model
-        self.device = device
-        # parallel
-        if torch.cuda.device_count() > 1:
-            self.model = nn.DataParallel(self.model)
-        self.model.to(self.device)
         self.model.eval()
 
         self.target_layer = target_layer
