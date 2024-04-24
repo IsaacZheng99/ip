@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
     # calculate accuracy for target class
     print("Calculating accuracy.")
-    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print(f"Device: {device}.")
     # model = eval("models." + args.model)
     model = models.resnet50(pretrained=True)
