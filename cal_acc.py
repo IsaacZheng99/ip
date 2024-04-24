@@ -85,26 +85,27 @@ if __name__ == '__main__':
     hook_handle = model._modules.get(args.target_model_layer).register_forward_hook(hook_feature)
 
     # calculate original accuracy
-    org_right = 0
-    for images in data_loader:
-        images.to(device)
-        outputs = model(images)
-        _, predicted = torch.max(outputs.data, 1)
-        org_right += (predicted == args.true_label).sum().item()
-    print(f"\tOriginally, right: {org_right}, acc: {org_right / image_count:.5f}")
-
-    print(f"\tTotal latent variables count: {len(hltm_nodes_analyzer.var_neuron)}")
-    for idx, (latent_variable, neurons) in enumerate(hltm_nodes_analyzer.var_neuron.items(), start=1):
-        hook_handle.remove()
-        dead_neurons = neurons
-        model._modules.get(args.target_model_layer).register_forward_hook(hook_feature)
-        right = 0
+    with torch.no_grad():
+        org_right = 0
         for images in data_loader:
+            images.to(device)
             outputs = model(images)
             _, predicted = torch.max(outputs.data, 1)
-            right += (predicted == args.true_label).sum().item()
-        # print(f"\t{idx}: latent variable: {latent_variable}, right: {right}, acc: {right / image_count:.5f}")
-        if right != org_right:
-            print(f"\t{idx}: latent variable: {latent_variable}, right: {right}, acc: {right / image_count:.5f}")
+            org_right += (predicted == args.true_label).sum().item()
+        print(f"\tOriginally, right: {org_right}, acc: {org_right / image_count:.5f}")
+
+        print(f"\tTotal latent variables count: {len(hltm_nodes_analyzer.var_neuron)}")
+        for idx, (latent_variable, neurons) in enumerate(hltm_nodes_analyzer.var_neuron.items(), start=1):
+            hook_handle.remove()
+            dead_neurons = neurons
+            model._modules.get(args.target_model_layer).register_forward_hook(hook_feature)
+            right = 0
+            for images in data_loader:
+                outputs = model(images)
+                _, predicted = torch.max(outputs.data, 1)
+                right += (predicted == args.true_label).sum().item()
+            # print(f"\t{idx}: latent variable: {latent_variable}, right: {right}, acc: {right / image_count:.5f}")
+            if right != org_right:
+                print(f"\t{idx}: latent variable: {latent_variable}, right: {right}, acc: {right / image_count:.5f}")
 
     print("Finished.")
