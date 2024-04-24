@@ -93,12 +93,11 @@ if __name__ == '__main__':
     for idx in range(latent_variables_count):
         print(f"\tProcessing latent variable: {latent_variables[idx]}")
         hook_handle.remove()
-        dead_neurons = hltm_nodes_analyzer.var_neuron[latent_variables[idx]]
+        dead_neurons = hltm_nodes_analyzer.var_neuron.get(latent_variables[idx], [])
         model._modules.get(args.target_model_layer).register_forward_hook(hook_feature)
         # right = 0
         for images in data_loader:
-            images.to(device)
-            outputs = model(images)
+            outputs = model(images.to(device))
             _, predicted = torch.max(outputs.data, 1)
             # right += (predicted == args.true_label).sum().item()
             probs_outputs = torch.softmax(outputs.data, dim=1)
