@@ -25,7 +25,6 @@ def set_arguments():
     parser.add_argument("--target_hltm_layer", type=int, help="calculate probability based on latent varibles of the target layer")
     parser.add_argument("--input_folder_path", type=str, help="folder path of the input images")
     parser.add_argument("--true_label", type=int, help="true label of the input images")
-    parser.add_argument("--target_label", type=int, help="target label for calculating probability")
 
     args = parser.parse_args()
     return args

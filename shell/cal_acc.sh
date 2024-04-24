@@ -11,6 +11,7 @@
 #       --true_label 331 \
 #       --target_label 331 \
 
+CUDA_VISIBLE_DEVICES=0 \
 python cal_acc.py \
        --hltm_nodes_json_path "./result/hltm/ResNet50-test10000/ResNet50-test10000.nodes.json" \
        --class_index_path "./dataset/imagenet/label/imagenet_class_index.json" \
@@ -23,4 +24,3 @@ python cal_acc.py \
        --target_hltm_layer 5 \
        --input_folder_path "./dataset/imagenet/data/val_sep" \
        --true_label 331 \
-       --target_label 331 \
