@@ -22,6 +22,7 @@ def set_arguments():
     parser.add_argument("--std", type=eval, help="std for normalization")
     parser.add_argument("--batch_size", type=int, help="batch size for input images")
     parser.add_argument("--target_model_layer", type=str, help="add hook to the target layer of the model")
+    parser.add_argument("--target_hltm_layer", type=int, help="calculate probability based on latent varibles of the target layer")
     parser.add_argument("--input_folder_path", type=str, help="folder path of the input images")
     parser.add_argument("--true_label", type=int, help="true label of the input images")
     parser.add_argument("--target_label", type=int, help="target label for calculating probability")
@@ -76,7 +77,7 @@ if __name__ == '__main__':
 
     # calculate accuracy for target class
     print("Calculating accuracy.")
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
     print(f"Device: {device}.")
     # model = eval("models." + args.model)
     model = models.resnet50(pretrained=True)
@@ -93,10 +94,10 @@ if __name__ == '__main__':
             org_right += (predicted == args.true_label).sum().item()
         print(f"\tOriginally, right: {org_right}, acc: {org_right / image_count:.5f}")
 
-        print(f"\tTotal latent variables count: {len(hltm_nodes_analyzer.var_neuron)}")
-        for idx, (latent_variable, neurons) in enumerate(hltm_nodes_analyzer.var_neuron.items(), start=1):
+        print(f"\tTotal latent variables count: {len(hltm_nodes_analyzer[args.target_hltm_layer])}")
+        for idx, latent_variable in enumerate(hltm_nodes_analyzer[args.target_hltm_layer], start=1):
             hook_handle.remove()
-            dead_neurons = neurons
+            dead_neurons = hltm_nodes_analyzer.var_neuron[latent_variable]
             model._modules.get(args.target_model_layer).register_forward_hook(hook_feature)
             right = 0
             for images in data_loader:
