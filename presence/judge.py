@@ -48,7 +48,8 @@ class PresenceJudge:
         :param indices: selected images indices
         """
         self.image_indices = indices.tolist()
-        outputs = self.model(images)
+        with torch.no_grad():
+            outputs = self.model(images)
 
     def __mean_hook(self, module, input, output):
         batch_size = output.shape[0]
