@@ -94,8 +94,8 @@ if __name__ == '__main__':
             org_right += (predicted == args.true_label).sum().item()
         print(f"\tOriginally, right: {org_right}, acc: {org_right / image_count:.5f}")
 
-        print(f"\tTotal latent variables count: {len(hltm_nodes_analyzer[args.target_hltm_layer])}")
-        for idx, latent_variable in enumerate(hltm_nodes_analyzer[args.target_hltm_layer], start=1):
+        print(f"\tTotal latent variables count: {len(hltm_nodes_analyzer.layer_var[args.target_hltm_layer])}")
+        for idx, latent_variable in enumerate(hltm_nodes_analyzer.layer_var[args.target_hltm_layer], start=1):
             hook_handle.remove()
             dead_neurons = hltm_nodes_analyzer.var_neuron[latent_variable]
             model._modules.get(args.target_model_layer).register_forward_hook(hook_feature)
