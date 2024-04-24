@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader
 from PIL import Image
 import torchvision.models as models
 import torchvision.transforms as transforms
-import matplotlib.pyplot as plt
 from hltm_analyze import HLTMNodesAnalyzer
 
 
@@ -79,7 +78,8 @@ if __name__ == '__main__':
     print("Calculating accuracy.")
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print(f"Device: {device}.")
-    model = eval("models." + args.model)
+    # model = eval("models." + args.model)
+    model = models.resnet50(pretrained=True)
     model.to(device)
     model.eval()
     hook_handle = model._modules.get(args.target_model_layer).register_forward_hook(hook_feature)
@@ -104,7 +104,8 @@ if __name__ == '__main__':
                 outputs = model(images)
                 _, predicted = torch.max(outputs.data, 1)
                 right += (predicted == args.true_label).sum().item()
-            # print(f"\t{idx}: latent variable: {latent_variable}, right: {right}, acc: {right / image_count:.5f}")
+            # here we simply consider latent variables that can change the accuracy
+            # TODO maybe we can step forward to compare the change of top-k predicted classes
             if right != org_right:
                 print(f"\t{idx}: latent variable: {latent_variable}, right: {right}, acc: {right / image_count:.5f}")
 
