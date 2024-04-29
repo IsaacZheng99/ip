@@ -20,6 +20,7 @@ class HLTMNodesAnalyzer:
         self.layer: int = -1  # layer of the HLTM
         self.layer_var: Dict = defaultdict(list)  # key: layer, value: [latent variable]
         self.var_neuron: Dict = defaultdict(list)  # key: latent variable, value: [neuron index]
+        self.var_top_neuron: Dict = defaultdict(list)  # key: latent variable, value: [top_neuron index]
 
     def init(self):
         """
@@ -29,6 +30,7 @@ class HLTMNodesAnalyzer:
         self.cal_layer()  # calculate the layer
         self.gen_layer_var_dict()  # generate the dict with layer as key and latent variable as value
         self.gen_var_neuron_dict()  # generate the dict with latent variable as key and neuron index as value
+        self.gen_var_top_neuron_dict()  # generate the dict with latent variable as key and top_neuron (i.e., neurons in the "text" part) index as value
 
     def read_node_file(self):
         """
@@ -74,3 +76,18 @@ class HLTMNodesAnalyzer:
                 neurons.extend(indices)
             return neurons
         backtrace(self.layer, self.hltm_lst)
+
+    def gen_var_top_neuron_dict(self):
+        """
+        generate the dict with latent variable as key and top_neuron (i.e., neurons in the "text" part) index as value
+        """
+
+        def traverse(cur_layer, cur_vars):
+            if not cur_layer:
+                return
+            for var_dict in cur_vars:
+                indices = re.findall(r'\d+', var_dict["text"])
+                for index in indices:
+                    self.var_top_neuron[var_dict["id"]].append(int(index))
+                traverse(cur_layer - 1, var_dict["children"])
+        traverse(self.layer, self.hltm_lst)
