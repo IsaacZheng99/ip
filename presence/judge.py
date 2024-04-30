@@ -31,14 +31,16 @@ class PresenceJudge:
         self.presence_functions: Dict = {
             "mean": self.__mean_hook,
             "max": self.__max_hook,
+            "wx": self.__wx_hook,
         }
         # register hook according to the presence way
         hook_func = self.presence_functions.get(self.presence_judge_way)
         if hook_func:
-            if torch.cuda.device_count() > 1:
-                getattr(self.model.module, self.target_layer).register_forward_hook(hook_func)
-            else:
-                getattr(self.model, self.target_layer).register_forward_hook(hook_func)
+            # if torch.cuda.device_count() > 1:
+            #     getattr(self.model.module, self.target_layer).register_forward_hook(hook_func)
+            # else:
+            #     getattr(self.model, self.target_layer).register_forward_hook(hook_func)
+            getattr(self.model, self.target_layer).register_forward_hook(hook_func)
         self.threshold = threshold
         self.image_indices = None  # selected images indices
 
@@ -96,3 +98,29 @@ class PresenceJudge:
             all_documents += '\n'  # one line corresponds to one document
         with open(self.output_path, "a") as file:
             file.write(all_documents)
+
+    def __wx_hook(self, module, input, output):
+        batch_size = output.shape[0]
+        neuron_count = output.shape[1]
+        feature_maps = output.view(batch_size, neuron_count, -1)
+        # get the mean value (for ResNet50, there is an avgpool-layer)
+        mean_maps = torch.mean(feature_maps, dim=2)
+        present_neurons = defaultdict(list)  # key: image idx, value: [neuron]
+        # TODO
+        if self.target_layer == "layer4":
+            for image_idx in range(mean_maps.shape[0]):
+                present_neurons[image_idx] = []
+                for neuron_idx in range(mean_maps.shape[1]):
+                    # for layer4 of ResNet50, if wx value > threshold, we assume the neuron is present
+                    max_wx = torch.max(mean_maps[image_idx][neuron_idx] * self.model.state_dict()['fc.weight'].T[neuron_idx])
+                    if max_wx >= self.threshold:
+                        present_neurons[image_idx].append(neuron_idx)
+            # convert the present neurons to present words
+            all_documents = ""
+            for image_idx, neurons in present_neurons.items():
+                all_documents += f"{self.image_indices[image_idx]} "
+                for neuron in neurons:
+                    all_documents += f"neuron{neuron} "
+                all_documents += '\n'  # one line corresponds to one document
+            with open(self.output_path, "a") as file:
+                file.write(all_documents)
